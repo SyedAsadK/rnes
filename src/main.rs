@@ -1,3 +1,6 @@
+use  crate::comp::cpu::*;
+
+pub mod comp;
 fn main() {
-    println!("Hello, world!");
+    // todo!("Seperate modules for blocks")
 }
