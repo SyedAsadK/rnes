@@ -4,6 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sdl2 = "0.34.0"
 rand = "=0.7.3"
-sdl3 = "0.14.31"
+sdl2 = "0.37.0"

@@ -1,11 +1,12 @@
-use crate::comp::cpu::*;
+use comp::cpu::CPU;
+use comp::cpu::Mem;
 use rand::Rng;
-use sdl3::event::Event;
-use sdl3::keyboard::Keycode;
-use sdl3::pixels::Color;
-// use sdl3::pixels::PixelFormat;
-// use sdl3::video::Window;
-use sdl3::EventPump;
+use sdl2::EventPump;
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
+use sdl2::pixels::PixelFormatEnum;
+
 pub mod comp;
 fn color(byte: u8) -> Color {
     match byte {
@@ -76,30 +77,29 @@ fn handle_user_input(cpu: &mut CPU, event_pump: &mut EventPump) {
     }
 }
 fn main() {
+    // init sdl2
+
     let window_width = 1280;
     let window_height = 720;
-    let texture_width = 32;
-    let texture_height = 32;
-    // initing sdl3
-    sdl3::hint::set(sdl3::hint::names::RENDER_VSYNC, "1");
-    let sld_context = sdl3::init().expect("error in init");
-    let video_subsystem = sld_context.video().expect("error in video_subsystem");
+
+    //
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem
-        .window("Snek", (window_width) as u32, (window_height) as u32)
+        .window("Snake game", (window_width) as u32, (window_height) as u32)
         .position_centered()
         .build()
-        .expect("error in window initialization");
-    let mut canvas = window.into_canvas();
-    let mut event_pump = sld_context.event_pump().expect("event pump error");
-    let scale_x = window_width as f32 / texture_width as f32;
-    let scale_y = window_height as f32 / texture_height as f32;
-    canvas.set_scale(scale_x, scale_y).unwrap();
-
-    let texture_creator = canvas.texture_creator();
-    let mut texture = texture_creator
-        .create_texture_streaming(None, 32, 32)
         .unwrap();
-    texture.set_scale_mode(sdl3::render::ScaleMode::Nearest);
+
+    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
+    let mut event_pump = sdl_context.event_pump().unwrap();
+    canvas.set_scale(10.0, 10.0).unwrap();
+
+    let creator = canvas.texture_creator();
+    let mut texture = creator
+        .create_texture_target(PixelFormatEnum::RGB24, 32, 32)
+        .unwrap();
+
     let game_code = vec![
         0x20, 0x06, 0x06, 0x20, 0x38, 0x06, 0x20, 0x0d, 0x06, 0x20, 0x2a, 0x06, 0x60, 0xa9, 0x02,
         0x85, 0x02, 0xa9, 0x04, 0x85, 0x03, 0xa9, 0x11, 0x85, 0x10, 0xa9, 0x10, 0x85, 0x12, 0xa9,

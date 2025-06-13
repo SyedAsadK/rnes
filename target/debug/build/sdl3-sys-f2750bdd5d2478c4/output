@@ -1,2 +1,0 @@
-cargo::rustc-link-lib=SDL3
-cargo::rustc-cfg=feature="assert-level-debug"
