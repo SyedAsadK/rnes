@@ -1,0 +1,1 @@
+std::ops::RangeInclusive<{integer}>: SampleBorrow<std::ops::RangeInclusive<{integer}>>
