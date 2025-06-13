@@ -3,7 +3,7 @@
 **rnes** is a Rust-based NES (Nintendo Entertainment System) emulator.  
 This project is a personal attempt to learn about emulator development, the 6502 CPU, and NES graphics rendering using modern Rust.
 
-![Demo Screenshot](demo_screenshot.png)
+![Demo](snk_game.gif)
 
 ## Features
 
@@ -62,10 +62,4 @@ cargo run --release
 
 Pull requests are welcome! Feel free to suggest improvements, submit bug fixes, or help expand emulator functionality.
 
-## License
 
-MIT License
-
----
-
-*This project was inspired by [OneLoneCoder's NES emulator series](https://youtube.com/playlist?list=PLrOv9FMX8xJE8NgepZR1etrsU63fDDGxO) and Rust emulation tutorials.*
