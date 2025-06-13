@@ -8,7 +8,7 @@ This project is a personal attempt to learn about emulator development, the 6502
 ## Features
 
 - CPU: Partial 6502 emulation
-- Graphics: Basic 32x32 framebuffer rendering (SDL3)
+- Graphics: Basic 32x32 framebuffer rendering (SDL2)
 - Input: Keyboard controls (WASD for movement, Escape to quit)
 - Game Example: Includes a simple "snake" game ROM
 - Random number support for in-game events
@@ -18,7 +18,7 @@ This project is a personal attempt to learn about emulator development, the 6502
 ### Prerequisites
 
 - Rust (latest stable recommended)
-- [SDL3](https://github.com/libsdl-org/SDL) development libraries (ensure they are installed on your system)
+- [SDL2](https://github.com/libsdl-org/SDL) development libraries (ensure they are installed on your system)
 
 ### Building
 
@@ -35,7 +35,7 @@ Build and run:
 cargo run --release
 ```
 
-> **Note:** If you get build errors related to SDL, make sure you have the SDL3 development libraries installed.
+> **Note:** If you get build errors related to SDL, make sure you have the SDL2 development libraries installed.
 
 ### Controls
 
