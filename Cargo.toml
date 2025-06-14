@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 rand = "=0.7.3"
 sdl2 = "0.37.0"
+bitflags = "1.2.1"
