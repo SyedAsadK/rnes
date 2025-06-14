@@ -6,6 +6,7 @@ bitflags! {
     // |||| ||||
     // |||+-++++- Least significant bits previously written into a PPU register
     // |||        (due to register not being updated for this address)
+    // ||
     // ||+------- Sprite overflow. The intent was for this flag to be set
     // ||         whenever more than eight sprites appear on a scanline, but a
     // ||         hardware bug causes the actual behavior to be more complicated
