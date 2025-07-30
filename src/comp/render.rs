@@ -26,7 +26,7 @@ fn bg_pallette(ppu: &NesPPU, tile_column: usize, tile_row: usize) -> [u8; 4] {
 
 pub fn render(ppu: &NesPPU, frame: &mut Frame) {
     let bank = ppu.ctrl.bknd_pattern_addr();
-    for i in 0..0x30c0 {
+    for i in 0..0x3c0 {
         let tile = ppu.vram[i] as u16;
         let tile_column = i % 32;
         let tile_row = i / 32;
@@ -41,10 +41,10 @@ pub fn render(ppu: &NesPPU, frame: &mut Frame) {
                 upper = upper >> 1;
                 lower = lower >> 1;
                 let rgb = match value {
-                    0 => palette::SYSTEM_PALLETE[0x01],
-                    1 => palette::SYSTEM_PALLETE[0x23],
-                    2 => palette::SYSTEM_PALLETE[0x27],
-                    3 => palette::SYSTEM_PALLETE[0x30],
+                    0 => palette::SYSTEM_PALLETE[ppu.palette_table[0] as usize],
+                    1 => palette::SYSTEM_PALLETE[palette[1] as usize],
+                    2 => palette::SYSTEM_PALLETE[palette[2] as usize],
+                    3 => palette::SYSTEM_PALLETE[palette[3] as usize],
                     _ => panic!("can't be"),
                 };
                 frame.set_pixel(tile_column * 8 + x, tile_row * 8 + y, rgb)

@@ -557,13 +557,15 @@ impl<'a> CPU<'a> {
             }
             callback(self);
             let opcode = self.mem_read(self.pc);
-            if self.pc == 0x8008 {
-                self.pc += 1;
-            } else {
-                self.pc += 1;
-            }
+            self.pc += 1;
+            // if self.pc == 0x8008 {
+            //     self.pc += 1;
+            // } else {
+            //     self.pc += 1;
+            // }
             let cycles = OPCODE_CYCLES[opcode as usize];
-            self.cycles += cycles as usize;
+            self.bus.tick(cycles);
+            // self.cycles += cycles as usize;
             match opcode {
                 0x00 => {
                     return;
@@ -1308,7 +1310,7 @@ impl<'a> CPU<'a> {
 
                 _ => todo!("implement this"),
             }
-            self.bus.tick(self.cycles as u8);
+            // self.bus.tick(self.cycles as u8);
         }
     }
 
