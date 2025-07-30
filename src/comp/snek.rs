@@ -1,6 +1,10 @@
 use std::fs::File;
 use std::io::prelude::*;
 
+use sdl2::{EventPump, event::Event, keyboard::Keycode, pixels::Color};
+
+use crate::comp::cpu::{CPU, Mem};
+
 fn create_fake_rom(file_name: String) {
     let mut buffer = File::create(file_name).unwrap();
     let header = vec![
@@ -63,71 +67,71 @@ fn create_fake_rom(file_name: String) {
     buffer.flush().unwrap();
 }
 
-// fn color(byte: u8) -> Color {
-//     match byte {
-//         0 => Color::BLACK,
-//         1 => Color::WHITE,
-//         2 | 9 => Color::GRAY,
-//         3 | 10 => Color::RED,
-//         4 | 11 => Color::GREEN,
-//         5 | 12 => Color::BLUE,
-//         6 | 13 => Color::MAGENTA,
-//         7 | 14 => Color::YELLOW,
-//         _ => Color::CYAN,
-//     }
-// }
-// fn read_screen_state(cpu: &CPU, frame: &mut [u8; 32 * 3 * 32]) -> bool {
-//     let mut frame_idx = 0;
-//     let mut update = false;
-//     for i in 0x0200..0x600 {
-//         let color_idx = cpu.mem_read(i as u16);
-//         let color = color(color_idx);
-//
-//         let (r, g, b) = (color.r, color.g, color.b);
-//
-//         if frame[frame_idx] != r || frame[frame_idx + 1] != g || frame[frame_idx + 2] != b {
-//             frame[frame_idx] = r;
-//             frame[frame_idx + 1] = g;
-//             frame[frame_idx + 2] = b;
-//             update = true;
-//         }
-//         frame_idx += 3;
-//     }
-//     update
-// }
-// fn handle_user_input(cpu: &mut CPU, event_pump: &mut EventPump) {
-//     for event in event_pump.poll_iter() {
-//         match event {
-//             Event::Quit { .. }
-//             | Event::KeyDown {
-//                 keycode: Some(Keycode::Escape),
-//                 ..
-//             } => std::process::exit(0),
-//             Event::KeyDown {
-//                 keycode: Some(Keycode::W),
-//                 ..
-//             } => {
-//                 cpu.mem_write(0xff, 0x77);
-//             }
-//             Event::KeyDown {
-//                 keycode: Some(Keycode::S),
-//                 ..
-//             } => {
-//                 cpu.mem_write(0xff, 0x73);
-//             }
-//             Event::KeyDown {
-//                 keycode: Some(Keycode::A),
-//                 ..
-//             } => {
-//                 cpu.mem_write(0xff, 0x61);
-//             }
-//             Event::KeyDown {
-//                 keycode: Some(Keycode::D),
-//                 ..
-//             } => {
-//                 cpu.mem_write(0xff, 0x64);
-//             }
-//             _ => { /* do nothing */ }
-//         }
-//     }
-// }
+fn color(byte: u8) -> Color {
+    match byte {
+        0 => Color::BLACK,
+        1 => Color::WHITE,
+        2 | 9 => Color::GRAY,
+        3 | 10 => Color::RED,
+        4 | 11 => Color::GREEN,
+        5 | 12 => Color::BLUE,
+        6 | 13 => Color::MAGENTA,
+        7 | 14 => Color::YELLOW,
+        _ => Color::CYAN,
+    }
+}
+fn read_screen_state(cpu: &mut CPU, frame: &mut [u8; 32 * 3 * 32]) -> bool {
+    let mut frame_idx = 0;
+    let mut update = false;
+    for i in 0x0200..0x600 {
+        let color_idx = cpu.mem_read(i as u16);
+        let color = color(color_idx);
+
+        let (r, g, b) = (color.r, color.g, color.b);
+
+        if frame[frame_idx] != r || frame[frame_idx + 1] != g || frame[frame_idx + 2] != b {
+            frame[frame_idx] = r;
+            frame[frame_idx + 1] = g;
+            frame[frame_idx + 2] = b;
+            update = true;
+        }
+        frame_idx += 3;
+    }
+    update
+}
+fn handle_user_input(cpu: &mut CPU, event_pump: &mut EventPump) {
+    for event in event_pump.poll_iter() {
+        match event {
+            Event::Quit { .. }
+            | Event::KeyDown {
+                keycode: Some(Keycode::Escape),
+                ..
+            } => std::process::exit(0),
+            Event::KeyDown {
+                keycode: Some(Keycode::W),
+                ..
+            } => {
+                cpu.mem_write(0xff, 0x77);
+            }
+            Event::KeyDown {
+                keycode: Some(Keycode::S),
+                ..
+            } => {
+                cpu.mem_write(0xff, 0x73);
+            }
+            Event::KeyDown {
+                keycode: Some(Keycode::A),
+                ..
+            } => {
+                cpu.mem_write(0xff, 0x61);
+            }
+            Event::KeyDown {
+                keycode: Some(Keycode::D),
+                ..
+            } => {
+                cpu.mem_write(0xff, 0x64);
+            }
+            _ => { /* do nothing */ }
+        }
+    }
+}

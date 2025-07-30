@@ -1,10 +1,10 @@
 // / Generates a trace string for the current CPU state, disassembling the
 // use crate::comp::cpu::AddressingMode;
-use crate::comp::cpu::Mem;
 use crate::comp::cpu::CPU;
+use crate::comp::cpu::Mem;
 /// instruction at the program counter and showing register values.
 /// This is an invaluable tool for debugging an emulator.
-pub fn trace(cpu: &CPU) -> String {
+pub fn trace(cpu: &mut CPU) -> String {
     let begin = cpu.pc;
     let code = cpu.mem_read(begin);
 

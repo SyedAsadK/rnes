@@ -28,6 +28,24 @@ bitflags! {
 ///  | +--------------- Overflow Flag
 ///  +----------------- Negative Flag
 ///
+pub static OPCODE_CYCLES: [u8; 256] = [
+    7, 6, 2, 2, 2, 3, 5, 2, 3, 2, 2, 2, 4, 4, 6, 2, // 0x00
+    2, 5, 2, 2, 2, 4, 6, 2, 4, 4, 2, 2, 4, 6, 7, 2, // 0x10
+    6, 6, 2, 2, 3, 3, 5, 2, 4, 2, 2, 2, 4, 4, 6, 2, // 0x20
+    2, 5, 2, 2, 2, 4, 6, 2, 4, 4, 2, 2, 4, 6, 7, 2, // 0x30
+    6, 6, 2, 2, 2, 3, 5, 2, 3, 2, 2, 2, 3, 4, 6, 2, // 0x40
+    2, 5, 2, 2, 2, 4, 6, 2, 4, 4, 2, 2, 4, 6, 7, 2, // 0x50
+    6, 6, 2, 2, 2, 3, 5, 2, 4, 2, 2, 2, 5, 4, 6, 2, // 0x60
+    2, 5, 2, 2, 2, 4, 6, 2, 4, 4, 2, 2, 4, 6, 7, 2, // 0x70
+    2, 6, 2, 2, 3, 3, 5, 2, 2, 2, 2, 2, 4, 4, 6, 2, // 0x80
+    2, 5, 2, 2, 4, 4, 6, 2, 3, 5, 2, 2, 4, 6, 7, 2, // 0x90
+    2, 6, 2, 2, 3, 3, 5, 2, 4, 2, 2, 2, 4, 4, 6, 2, // 0xA0
+    2, 5, 2, 2, 2, 4, 6, 2, 4, 4, 2, 2, 4, 6, 7, 2, // 0xB0
+    2, 6, 2, 2, 3, 3, 5, 2, 2, 2, 2, 2, 4, 4, 6, 2, // 0xC0
+    2, 5, 2, 2, 4, 4, 6, 2, 3, 5, 2, 2, 5, 6, 7, 2, // 0xD0
+    2, 6, 2, 2, 3, 3, 5, 2, 4, 2, 2, 2, 4, 4, 6, 2, // 0xE0
+    2, 5, 2, 2, 2, 4, 6, 2, 4, 4, 2, 2, 4, 6, 7, 2, // 0xF0
+];
 pub struct CPU {
     pub reg_a: u8,
     pub reg_x: u8,
@@ -36,16 +54,16 @@ pub struct CPU {
     pub pc: u16,
     pub stk_ptr: u8,
     pub bus: Bus,
+    pub cycles: usize,
 }
 const STK: u16 = 0x0100;
 const STK_RESET: u8 = 0xfd;
-
 pub trait Mem {
-    fn mem_read(&self, addr: u16) -> u8;
+    fn mem_read(&mut self, addr: u16) -> u8;
 
     fn mem_write(&mut self, addr: u16, data: u8);
 
-    fn mem_read_u16(&self, pos: u16) -> u16 {
+    fn mem_read_u16(&mut self, pos: u16) -> u16 {
         let lo = self.mem_read(pos) as u16;
         let hi = self.mem_read(pos + 1) as u16;
         (hi << 8) | (lo as u16)
@@ -74,14 +92,14 @@ pub enum AddressingMode {
 }
 
 impl Mem for CPU {
-    fn mem_read(&self, addr: u16) -> u8 {
+    fn mem_read(&mut self, addr: u16) -> u8 {
         self.bus.mem_read(addr)
     }
 
     fn mem_write(&mut self, addr: u16, data: u8) {
         self.bus.mem_write(addr, data);
     }
-    fn mem_read_u16(&self, pos: u16) -> u16 {
+    fn mem_read_u16(&mut self, pos: u16) -> u16 {
         self.bus.mem_read_u16(pos)
     }
 
@@ -100,6 +118,7 @@ impl CPU {
             status: CpuFlags::from_bits_truncate(0b0010_0000),
             pc: 0,
             stk_ptr: STK_RESET,
+            cycles: 0,
             bus,
         }
     }
@@ -138,6 +157,7 @@ impl CPU {
         self.reg_a = 0;
         self.status = CpuFlags::from_bits_truncate(0b0010_0000);
         self.stk_ptr = STK_RESET;
+        self.cycles = 0;
         self.pc = self.mem_read_u16(0xFFFC);
     }
     pub fn load_and_run(&mut self, program: Vec<u8>) {
@@ -188,8 +208,23 @@ impl CPU {
 
     fn _brk(&mut self) {
         self.stk_push_u16(self.pc + 1);
-        self.php();
-        self.sei();
+        let mut flag = self.status.clone();
+        flag.insert(CpuFlags::BREAK);
+        flag.insert(CpuFlags::UNUSED);
+
+        self.stk_push(flag.bits());
+        self.status.insert(CpuFlags::INTERRUPT_DISABLE);
+        self.pc = self.mem_read_u16(0xFFFE);
+    }
+
+    fn _interrupt_irq(&mut self) {
+        self.stk_push_u16(self.pc);
+        let mut flag = self.status.clone();
+        flag.remove(CpuFlags::BREAK);
+        flag.insert(CpuFlags::UNUSED);
+
+        self.stk_push(flag.bits());
+        self.status.insert(CpuFlags::INTERRUPT_DISABLE);
         self.pc = self.mem_read_u16(0xFFFE);
     }
 
@@ -207,6 +242,7 @@ impl CPU {
         self.reg_a = self.reg_a & data;
         self.update_zero_and_neg_flag(self.reg_a);
     }
+
     fn asl(&mut self, mode: &AddressingMode) -> u8 {
         let addr = self.get_operand_address(mode);
         let mut data = self.mem_read(addr);
@@ -453,7 +489,7 @@ impl CPU {
         self.status.set(CpuFlags::CARRY, res & 1 == 1);
     }
 
-    fn get_operand_address(&self, mode: &AddressingMode) -> u16 {
+    fn get_operand_address(&mut self, mode: &AddressingMode) -> u16 {
         match mode {
             AddressingMode::Immediate => self.pc,
             AddressingMode::ZeroPage => self.mem_read(self.pc) as u16,
@@ -498,11 +534,27 @@ impl CPU {
             }
         }
     }
+
+    fn interrupt_nmi(&mut self) {
+        self.stk_push_u16(self.pc);
+        let mut flag = self.status.clone();
+        flag.remove(CpuFlags::BREAK);
+        flag.insert(CpuFlags::UNUSED);
+
+        self.stk_push(flag.bits);
+        self.status.insert(CpuFlags::INTERRUPT_DISABLE);
+
+        self.bus.tick(2);
+        self.pc = self.mem_read_u16(0xfffA);
+    }
     pub fn run_with_callback<F>(&mut self, mut callback: F)
     where
         F: FnMut(&mut CPU),
     {
         loop {
+            if let Some(_nmi) = self.bus.poll_nmi_status() {
+                self.interrupt_nmi();
+            }
             callback(self);
             let opcode = self.mem_read(self.pc);
             if self.pc == 0x8008 {
@@ -510,7 +562,8 @@ impl CPU {
             } else {
                 self.pc += 1;
             }
-
+            let cycles = OPCODE_CYCLES[opcode as usize];
+            self.cycles += cycles as usize;
             match opcode {
                 0x00 => {
                     return;
@@ -1255,8 +1308,22 @@ impl CPU {
 
                 _ => todo!("implement this"),
             }
+            self.bus.tick(self.cycles as u8);
         }
     }
+
+    // fn interrupt(&mut self, interrupt: interrupt::Interrupt) {
+    //     self.stk_push_u16(self.pc);
+    //     let mut flag = self.status.clone();
+    //     flag.set(CpuFlags::BREAK, interrupt.b_flag_mask & 0b010000 == 1);
+    //     flag.set(CpuFlags::BREAK2, interrupt.b_flag_mask & 0b100000 == 1);
+    //
+    //     self.stk_push(flag.bits);
+    //     self.status.insert(CpuFlags::INTERRUPT_DISABLE);
+    //
+    //     self.bus.tick(interrupt.cpu_cycles);
+    //     self.pc = self.mem_read_u16(interrupt.vector_addr);
+    // }
 
     pub fn run(&mut self) {
         self.run_with_callback(|_| {});

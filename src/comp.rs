@@ -2,6 +2,8 @@ pub mod bus;
 pub mod cpu;
 pub mod ppu;
 pub mod regs;
+pub mod render;
 pub mod rom;
 pub mod snek;
+pub mod tiles;
 pub mod trace;
