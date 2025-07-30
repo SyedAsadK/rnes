@@ -46,14 +46,14 @@ pub static OPCODE_CYCLES: [u8; 256] = [
     2, 6, 2, 2, 3, 3, 5, 2, 4, 2, 2, 2, 4, 4, 6, 2, // 0xE0
     2, 5, 2, 2, 2, 4, 6, 2, 4, 4, 2, 2, 4, 6, 7, 2, // 0xF0
 ];
-pub struct CPU {
+pub struct CPU<'a> {
     pub reg_a: u8,
     pub reg_x: u8,
     pub reg_y: u8,
     pub status: CpuFlags,
     pub pc: u16,
     pub stk_ptr: u8,
-    pub bus: Bus,
+    pub bus: Bus<'a>,
     pub cycles: usize,
 }
 const STK: u16 = 0x0100;
@@ -91,7 +91,7 @@ pub enum AddressingMode {
     NoneAddressing,
 }
 
-impl Mem for CPU {
+impl Mem for CPU<'_> {
     fn mem_read(&mut self, addr: u16) -> u8 {
         self.bus.mem_read(addr)
     }
@@ -108,9 +108,9 @@ impl Mem for CPU {
     }
 }
 
-impl CPU {
+impl<'a> CPU<'a> {
     //constructor i.e. associated function
-    pub fn new(bus: Bus) -> Self {
+    pub fn new<'b>(bus: Bus<'b>) -> CPU<'b> {
         CPU {
             reg_a: 0,
             reg_x: 0,
