@@ -57,9 +57,9 @@ impl Mem for Bus<'_> {
                 let mirror_down_addr = addr & 0b00000111_11111111;
                 self.cpu_vram[mirror_down_addr as usize]
             }
-            0x2000 | 0x2001 | 0x2003 | 0x2005 | 0x2006 | 0x4014 => {
-                panic!("Attempt to read from write-only PPU address {:x}", addr);
-                // 0
+            PPU_REGISTERS | 0x2001 | 0x2003 | 0x2005 | 0x2006 | 0x4014 => {
+                // panic!("Attempt to read from write-only PPU address {:x}", addr);
+                0
             }
             0x2002 => self.ppu.read_status(),
             0x2004 => self.ppu.read_oam_data(),
