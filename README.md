@@ -1,41 +1,45 @@
 # rnes
 
 **rnes** is a Rust-based NES (Nintendo Entertainment System) emulator.  
-This project is a personal attempt to learn about emulator development, the 6502 CPU, and NES graphics rendering using modern Rust.
+This project is my personal exploration into the world of emulator development, focused on understanding the 6502 CPU architecture, NES graphics, and modern Rust programming.
 
 ![Demo](snk_game.gif)
+![Screenshot](ss1.png)
+![Screenshot](ss2.png)
+![Screenshot](ss3.png)
+![Screenshot](ss4.png)
 
 ## Features
 
-- CPU: Partial 6502 emulation
-- Graphics: Basic 32x32 framebuffer rendering (SDL2)
-- Input: Keyboard controls (WASD for movement, Escape to quit)
-- Game Example: Includes a simple "snake" game ROM
-- Random number support for in-game events
+- **CPU:** Partial 6502 emulation, with ongoing improvements
+- **Graphics:** Simple 32x32 framebuffer rendering using SDL2
+- **Input:** Keyboard controls (WASD for movement, Escape to quit)
+- **Game Example:** Includes a basic "snake" game ROM for demonstration
+- **Random Number Generation:** Used for in-game events
+- **Modular Design:** Codebase structured for extensibility and future features
 
 ## Getting Started
 
 ### Prerequisites
 
-- Rust (latest stable recommended)
-- [SDL2](https://github.com/libsdl-org/SDL) development libraries (ensure they are installed on your system)
+- Rust (latest stable version recommended)
+- [SDL2](https://github.com/libsdl-org/SDL) development libraries (must be installed on your system)
 
 ### Building
 
-Clone the repository:
+Clone this repository and build:
 
 ```bash
 git clone https://github.com/SyedAsadK/rnes.git
 cd rnes
-```
-
-Build and run:
-
-```bash
 cargo run --release
 ```
 
-> **Note:** If you get build errors related to SDL, make sure you have the SDL2 development libraries installed.
+```
+
+> **Note:** If you encounter build errors related to SDL2, ensure the SDL2 development libraries are correctly installed for your operating system.
+
+> **Note:** You need to input the rom name as argument, also supports --tiles arguement for sprites
 
 ### Controls
 
@@ -48,18 +52,16 @@ cargo run --release
 ## Project Structure
 
 - `src/comp/cpu.rs` — 6502 CPU emulation core
-- `src/main.rs` — SDL setup, emulation loop, game integration
-- `src/comp/` — Additional components (future expansion)
-- `resources/` — (Optional) Place for ROMs or assets
+- `src/main.rs` — SDL2 setup, emulation loop, game integration
+- `src/comp/` — Emulator components (graphics, input, etc.)
 
-## Known Issues / Limitations
+## Known Issues & Limitations
 
-- Not a full-featured NES emulator (yet)
-- Only supports basic framebuffer output (32x32 grid)
-- Only runs bundled simple games for now
+- Not a full-featured NES emulator; work in progress
+- Basic framebuffer output (32x32 grid only)
+- Only runs bundled simple games (no support for commercial NES ROMs yet)
+- Sound and advanced graphics features are not implemented
 
-## Contributing
+---
 
-Pull requests are welcome! Feel free to suggest improvements, submit bug fixes, or help expand emulator functionality.
-
-
+```

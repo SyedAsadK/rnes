@@ -35,7 +35,7 @@ fn main() {
 
         let mut canvas = window.into_canvas().present_vsync().build().unwrap();
         let mut event_pump = sdl_context.event_pump().unwrap();
-        canvas.set_scale(3.0, 3.0).unwrap();
+        canvas.set_scale(5.0, 5.0).unwrap();
 
         let creator = canvas.texture_creator();
         let mut texture = creator
