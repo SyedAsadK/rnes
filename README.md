@@ -35,8 +35,6 @@ cd rnes
 cargo run --release
 ```
 
-```
-
 > **Note:** If you encounter build errors related to SDL2, ensure the SDL2 development libraries are correctly installed for your operating system.
 
 > **Note:** You need to input the rom name as argument, also supports --tiles arguement for sprites
@@ -63,5 +61,3 @@ cargo run --release
 - Sound and advanced graphics features are not implemented
 
 ---
-
-```
