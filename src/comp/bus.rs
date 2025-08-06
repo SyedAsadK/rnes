@@ -33,8 +33,12 @@ impl<'a> Bus<'a> {
     }
     pub fn tick(&mut self, cycles: u8) {
         self.cycles += cycles as usize;
-        let new_frame = self.ppu.tick(cycles.saturating_mul(3));
-        if new_frame {
+
+        let nmi_before = self.ppu.nmi_interrupt.is_some();
+        self.ppu.tick(cycles * 3);
+        let nmi_after = self.ppu.nmi_interrupt.is_some();
+
+        if !nmi_before && nmi_after {
             (self.gameloop_callback)(&self.ppu, &mut self.cont1);
         }
     }
@@ -110,7 +114,6 @@ impl Mem for Bus<'_> {
                 // ignore joypad 2
             }
 
-            // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference#OAM_DMA_.28.244014.29_.3E_write
             0x4014 => {
                 let mut buffer: [u8; 256] = [0; 256];
                 let hi: u16 = (data as u16) << 8;
@@ -119,10 +122,6 @@ impl Mem for Bus<'_> {
                 }
 
                 self.ppu.write_oam_dma(&buffer);
-
-                // todo: handle this eventually
-                // let add_cycles: u16 = if self.cycles % 2 == 1 { 514 } else { 513 };
-                // self.tick(add_cycles); //todo this will cause weird effects as PPU will have 513/514 * 3 ticks
             }
             0x2008..=PPU_REGISTERS_MIRRORS_END => {
                 let mirror_down_addr = addr & 0b00100000_00000111;
