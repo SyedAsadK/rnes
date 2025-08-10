@@ -21,6 +21,7 @@ mod interrupt {
     #[derive(PartialEq, Eq)]
     pub enum InterruptType {
         NMI,
+        BRK,
     }
 
     #[derive(PartialEq, Eq)]
@@ -30,11 +31,19 @@ mod interrupt {
         pub(super) b_flag_mask: u8,
         pub(super) cpu_cycles: u8,
     }
+
     pub(super) const NMI: Interrupt = Interrupt {
         itype: InterruptType::NMI,
         vector_addr: 0xfffA,
         b_flag_mask: 0b00100000,
         cpu_cycles: 2,
+    };
+
+    pub(super) const BRK: Interrupt = Interrupt {
+        itype: InterruptType::BRK,
+        vector_addr: 0xfffe,
+        b_flag_mask: 0b00110000,
+        cpu_cycles: 1,
     };
 }
 // 6502 implementation
@@ -140,10 +149,10 @@ impl<'a> CPU<'a> {
             reg_a: 0,
             reg_x: 0,
             reg_y: 0,
-            status: CpuFlags::from_bits_truncate(0b0010_0000),
             pc: 0,
-            stk_ptr: STK_RESET,
             cycles: 0,
+            status: CpuFlags::from_bits_truncate(0b100100),
+            stk_ptr: STK_RESET,
             bus,
         }
     }
@@ -240,27 +249,27 @@ impl<'a> CPU<'a> {
         self.status.remove(CpuFlags::DECIMAL_MODE);
     }
 
-    fn _brk(&mut self) {
-        self.stk_push_u16(self.pc + 1);
-        let mut flag = self.status.clone();
-        flag.insert(CpuFlags::BREAK);
-        flag.insert(CpuFlags::UNUSED);
+    // fn _brk(&mut self) {
+    //     self.stk_push_u16(self.pc + 1);
+    //     let mut flag = self.status.clone();
+    //     flag.insert(CpuFlags::BREAK);
+    //     flag.insert(CpuFlags::UNUSED);
+    //
+    //     self.stk_push(flag.bits());
+    //     self.status.insert(CpuFlags::INTERRUPT_DISABLE);
+    //     self.pc = self.mem_read_u16(0xFFFE);
+    // }
 
-        self.stk_push(flag.bits());
-        self.status.insert(CpuFlags::INTERRUPT_DISABLE);
-        self.pc = self.mem_read_u16(0xFFFE);
-    }
-
-    fn _interrupt_irq(&mut self) {
-        self.stk_push_u16(self.pc);
-        let mut flag = self.status.clone();
-        flag.remove(CpuFlags::BREAK);
-        flag.insert(CpuFlags::UNUSED);
-
-        self.stk_push(flag.bits());
-        self.status.insert(CpuFlags::INTERRUPT_DISABLE);
-        self.pc = self.mem_read_u16(0xFFFE);
-    }
+    // fn _interrupt_irq(&mut self) {
+    //     self.stk_push_u16(self.pc);
+    //     let mut flag = self.status.clone();
+    //     flag.remove(CpuFlags::BREAK);
+    //     flag.insert(CpuFlags::UNUSED);
+    //
+    //     self.stk_push(flag.bits());
+    //     self.status.insert(CpuFlags::INTERRUPT_DISABLE);
+    //     self.pc = self.mem_read_u16(0xFFFE);
+    // }
 
     fn rti(&mut self) {
         let pulled_status = self.stk_pop();
@@ -391,7 +400,9 @@ impl<'a> CPU<'a> {
     }
 
     fn php(&mut self) {
-        self.stk_push(self.status.bits() | CpuFlags::BREAK.bits() | CpuFlags::UNUSED.bits());
+        self.stk_push(
+            self.status.bits() | CpuFlags::BREAK.bits() | CpuFlags::BREAK2.bits(), // | CpuFlags::UNUSED.bits(),
+        );
     }
 
     fn inc(&mut self, mode: &AddressingMode) -> u8 {
@@ -591,7 +602,7 @@ impl<'a> CPU<'a> {
         }
     }
 
-    fn interrupt_nmi(&mut self) {
+    fn _interrupt_nmi(&mut self) {
         self.stk_push_u16(self.pc);
         let mut flag = self.status.clone();
         flag.remove(CpuFlags::BREAK);
@@ -1370,14 +1381,11 @@ impl<'a> CPU<'a> {
             }
             self.bus.tick(cycles);
             if pc_state == self.pc {
-                // Most decoded instructions are 2 bytes; a handful are 1 byte.
                 let len = match opcode {
-                    // Single-byte instructions (implied, accumulator, register ops)
                     0xaa | 0xe8 | 0x00 | 0xd8 | 0x58 | 0xb8 | 0x18 | 0x38 | 0x78 | 0xf8 | 0x48
                     | 0x68 | 0x08 | 0x28 | 0x4a | 0x0a | 0x2a | 0x6a | 0xc8 | 0xca | 0x88
                     | 0xea | 0xa8 | 0xba | 0x8a | 0x9a | 0x98 | 0x1a | 0x3a | 0x5a | 0x7a
                     | 0xda | 0xfa => 1,
-                    // The rest are 2 bytes
                     _ => 2,
                 };
                 self.pc += (len - 1) as u16;
